@@ -27,6 +27,13 @@ def open_serial(device, baudrate=9600, bytesize=serial.EIGHTBITS, parity=serial.
     ss.open()
     return ss
 
+def is_number_string(s):
+    try:
+        float(s)  # 숫자로 변환 시도
+        return True
+    except ValueError:
+        return False
+
 def hmp155(cnt):
 
     global temp, humi
@@ -41,14 +48,16 @@ def hmp155(cnt):
 
     line = ser0.readline().decode('ascii').strip()
     first = line.startswith("RH")
-
+    print(line)
     if first == True:
         #"RH= 22.9 %RH T= 24.3 ‘C"
         # 데이터 파싱
         # if line.startswith("pw"):
         parts = line.split(' ')
-        humi = float(parts[1])
-        temp = float(parts[4][:4])
+        result = [x for x in parts if isinstance(x, str) and is_number_string(x)]
+
+        humi = float(result[0])
+        temp = float(result[1])
 
     ser0.close()
     return humi, temp, cnt
@@ -56,16 +65,16 @@ def hmp155(cnt):
 def pwd20():
     global vis_1, vis_10
     line = ser1.readline().decode('ascii').strip()
-        
+
     if line:
         # PW  100   7147  7086
         # 데이터 파싱
         # if line.startswith("pw"):
-        parts = line.split('  ')
-        vis_1 =float(parts[2])        # 1 minute average visibility
-        vis_10 = float(parts[3][:4])  # 10 minute average visibility
+        parts = line.split(' ')
+        vis_1 =float(parts[4])        # 1 minute average visibility
+        vis_10 = float(parts[5][:5])  # 10 minute average visibility
 
-    ser0.close()
+    ser1.close()
     return vis_1, vis_10
 
 try:
