@@ -48,16 +48,15 @@ def hmp155(cnt):
 
     line = ser0.readline().decode('ascii').strip()
     first = line.startswith("RH")
-    print(line)
-    if first == True:
-        #"RH= 22.9 %RH T= 24.3 ‘C"
-        # 데이터 파싱
-        # if line.startswith("pw"):
-        parts = line.split(' ')
-        result = [x for x in parts if isinstance(x, str) and is_number_string(x)]
 
-        humi = float(result[0])
-        temp = float(result[1])
+    if first == True:
+        #"RH= 22.9 %RH T= 24.3 ‘C"            
+        parts = line.split(' ')
+        result = [x for x in parts if x and x.strip()]
+            #['RH=', '22.9', '%RH', 'T=', '26.4', "'C"]
+
+        humi = float(result[1])
+        temp = float(result[4])
 
     ser0.close()
     return humi, temp, cnt
@@ -65,14 +64,18 @@ def hmp155(cnt):
 def pwd20():
     global vis_1, vis_10
     line = ser1.readline().decode('ascii').strip()
+        # PW  100   7147  7086  
 
     if line:
-        # PW  100   7147  7086
-        # 데이터 파싱
-        # if line.startswith("pw"):
         parts = line.split(' ')
-        vis_1 =float(parts[4])        # 1 minute average visibility
-        vis_10 = float(parts[5][:5])  # 10 minute average visibility
+            # ['\x01PW', '', '1\x0200', '', '', '7484', '', '8232\x03']
+        result = [x for x in parts if x and x.strip()]
+            # ['\x01PW', '1\x0200', '7562', '8120\x03']
+        remove_chars = ["\x01", "\x02", "\x03"]
+        result2 = [x.translate({ord(c): None for c in remove_chars}) for x in result]
+            #['PW', '100', '7562', '8120']
+        vis_1 =float(result2[2])        # 1 minute average visibility
+        vis_10 = float(result2[3])  # 10 minute average visibility
 
     ser1.close()
     return vis_1, vis_10
